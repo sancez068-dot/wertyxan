@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Funpay</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="icon" type="image/svg+xml" href="assets/telegram-logo.svg">
+    <link rel="preload" as="image" href="assets/banners/banner3.png" fetchpriority="high">
+    <script src="vendor/telegram-web-app.js"></script>
+    <script src="js/tg.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/translations.js" defer></script>
+    <script src="js/locale-pack.js" defer></script>
+    <script src="js/icons.js" defer></script>
+    <script src="js/progress-bar.js" defer></script>
+    <script src="js/modals.js" defer></script>
+    <script src="vendor/lottie.min.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
+    <script>
+    (function(){
+        var t = localStorage.getItem('app_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+    })();
+    </script>
+</head>
+<body>
+    <div id="app-splash" class="app-splash" role="status" aria-live="polite" aria-label="Loading">
+        <div class="app-splash__spinner" aria-hidden="true"></div>
+    </div>
+
+    <button type="button" class="theme-toggle hidden" id="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle__track">
+            <svg class="theme-toggle__sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+            <svg class="theme-toggle__moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+            <span class="theme-toggle__thumb">
+                <svg id="theme-thumb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+            </span>
+        </span>
+    </button>
+
+    <div id="app">
+        <div id="page-container"></div>
+
+        <!-- Нижний таббар (iOS-style) -->
+        <nav class="bottom-tabbar">
+            <div class="tabbar-wrapper">
+                <button class="tab-button active" data-page="orders">
+                    <span class="tab-icon tab-lottie" data-sticker="orders" aria-hidden="true"></span>
+                    <span class="tab-label" data-i18n="orders">Сделки</span>
+                </button>
+
+                <button class="tab-button" data-page="wallets">
+                    <span class="tab-icon tab-lottie" data-sticker="wallets" aria-hidden="true"></span>
+                    <span class="tab-label" data-i18n="wallets">Кошельки</span>
+                </button>
+
+                <button class="tab-button" data-page="leaders">
+                    <span class="tab-icon tab-lottie" data-sticker="leaders" aria-hidden="true"></span>
+                    <span class="tab-label" data-i18n="leaders">Лидеры</span>
+                </button>
+
+                <button class="tab-button" data-page="profile">
+                    <span class="tab-icon tab-lottie" data-sticker="profile" aria-hidden="true"></span>
+                    <span class="tab-label" data-i18n="profile">Профиль</span>
+                </button>
+
+                <div class="tab-indicator"></div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Шаблоны страниц -->
+    <template id="orders-page-template">
+        <div class="page orders-page">
+            <!-- Promo banner above title -->
+            <section class="deals-banner" aria-label="Promo">
+                <div class="deals-banner__frame">
+                    <div class="deals-banner__track" id="deals-banner-track" tabindex="0" role="region" aria-roledescription="carousel">
+                        <div class="deals-banner__rail" id="deals-banner-rail">
+                            <article class="deals-banner__slide is-active" data-index="0">
+                                <img class="deals-banner__img" src="assets/banners/banner3.png" alt="Funpay" width="2000" height="720" decoding="async" fetchpriority="high" draggable="false">
+                            </article>
+                            <article class="deals-banner__slide" data-index="1">
+                                <img class="deals-banner__img" data-src="assets/banners/banner5.png?v=25" alt="Promo" width="2000" height="720" decoding="async" loading="lazy" draggable="false">
+                            </article>
+                            <article class="deals-banner__slide" data-index="2">
+                                <img class="deals-banner__img" data-src="assets/banners/banner4.png?v=25" alt="Promo" width="2000" height="720" decoding="async" loading="lazy" draggable="false">
+                            </article>
+                        </div>
+                    </div>
+                    <div class="deals-banner__fade deals-banner__fade--left" aria-hidden="true"></div>
+                    <div class="deals-banner__fade deals-banner__fade--right" aria-hidden="true"></div>
+                </div>
+                <div class="deals-banner__dots" id="deals-banner-dots" role="tablist" aria-label="Banners">
+                    <button type="button" class="deals-banner__dot is-active" data-index="0" aria-label="1" aria-selected="true"></button>
+                    <button type="button" class="deals-banner__dot" data-index="1" aria-label="2" aria-selected="false"></button>
+                    <button type="button" class="deals-banner__dot" data-index="2" aria-label="3" aria-selected="false"></button>
+                </div>
+            </section>
+
+            <div class="page-header">
+                <h1 class="page-title" data-i18n="myOrders">Сделки</h1>
+            </div>
+            <div class="page-content">
+                <div class="action-buttons action-buttons--orders">
+                    <button class="btn btn-primary" id="create-order-btn" type="button">
+                        <span class="btn-lottie" data-btn-sticker="create" aria-hidden="true"></span>
+                        <span data-i18n="createOrder">Создать сделку</span>
+                    </button>
+                    <button class="btn btn-secondary" id="active-orders-btn" type="button">
+                        <span class="btn-lottie" data-btn-sticker="active" aria-hidden="true"></span>
+                        <span data-i18n="activeOrders">Активные сделки</span>
+                    </button>
+                    <button class="btn btn-secondary" id="history-orders-btn" type="button">
+                        <span class="btn-lottie" data-btn-sticker="history" aria-hidden="true"></span>
+                        <span data-i18n="orderHistory">История сделок</span>
+                    </button>
+                    <button class="btn btn-reviews" id="reviews-btn" type="button">
+                        <span class="btn-lottie" data-btn-sticker="reviews" aria-hidden="true"></span>
+                        <span data-i18n="dealsReviews">Отзывы о сделках</span>
+                    </button>
+                </div>
+                <div id="orders-list" class="orders-list"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="wallets-page-template">
+        <div class="page wallets-page">
+            <div class="page-header">
+                <h1 class="page-title" data-i18n="myWallets">Кошельки</h1>
+            </div>
+            <div class="page-content">
+                <!-- Compact currency picker — horizontally scrollable chip
+                     strip, replaces the native <select>. JS fills it from
+                     CONFIG.currencies and FunpayIcons. -->
+                <div id="wallet-currency-strip" class="currency-strip" role="tablist" aria-label="Currency"></div>
+
+                <!-- Реквизиты (включая TON Connect) — pre-rendered skeleton
+                     so the page never appears empty before JS hydrates. -->
+                <div id="wallet-requisites">
+                    <div class="info-card skeleton-card" aria-busy="true">
+                        <div class="skeleton-line skeleton-w-50"></div>
+                        <div class="skeleton-block skeleton-h-44" style="margin-top:12px"></div>
+                        <div class="skeleton-line skeleton-w-30" style="margin-top:14px"></div>
+                        <div class="skeleton-block skeleton-h-44" style="margin-top:8px"></div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="deposit-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <line x1="12" y1="19" x2="12" y2="5"></line>
+                            <polyline points="5 12 12 5 19 12"></polyline>
+                        </svg>
+                        <span data-i18n="deposit">Пополнить</span>
+                    </button>
+                    <button class="btn btn-secondary" id="withdraw-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
+                        <span data-i18n="withdraw">Вывести</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="profile-page-template">
+        <div class="page profile-page">
+            <div class="page-header">
+                <h1 class="page-title" data-i18n="profile">Профиль</h1>
+            </div>
+            <div class="page-content">
+                <!-- Аватар и ник -->
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">
+                        <img id="profile-avatar-img" alt="" loading="eager" decoding="async">
+                        <span id="profile-avatar-initial"></span>
+                    </div>
+                    <h2 class="profile-name" id="profile-name">—</h2>
+                    <p class="profile-username" id="profile-username"></p>
+                </div>
+
+                <!-- Кнопки управления профилем -->
+                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <button class="btn btn-primary" onclick="showTransactionsPage()" style="flex: 1;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span data-i18n="transactions">Транзакции</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="showLanguageSelector()" style="flex: 1;" id="language-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="language-icon">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                        <span data-i18n="languages">Языки</span>
+                    </button>
+                </div>
+
+                <!-- Блок балансов -->
+                <div class="info-card">
+                    <div class="card-header-with-toggle">
+                        <h3 class="card-title" data-i18n="balances">Балансы</h3>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="hide-zero-balances" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label" data-i18n="hideZero">Скрыть нулевые</span>
+                        </label>
+                    </div>
+                    <div id="balances-list" class="balances-list"></div>
+                </div>
+
+                <!-- Блок статистики ордеров. 4 tiles like before — the
+                     rename was: replace the "Активных" tile with
+                     "Успешных" (showing successful/completed count).
+                     "Завершённых" tile stays as is. User explicitly
+                     confirmed both tiles can show the same number since
+                     successful and completed are semantically equal. -->
+                <div class="info-card">
+                    <h3 class="card-title" data-i18n="orderStats">Статистика сделок</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label" data-i18n="successfulOrdersCount">Успешных</span>
+                            <span class="stat-value" id="stat-successful">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label" data-i18n="completedOrdersCount">Завершённых</span>
+                            <span class="stat-value" id="stat-completed">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label" data-i18n="cancelledOrdersCount">Отменённых</span>
+                            <span class="stat-value" id="stat-cancelled">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label" data-i18n="totalOrdersCount">Всего</span>
+                            <span class="stat-value" id="stat-total">0</span>
+                        </div>
+                        <div class="stat-item stat-highlight">
+                            <span class="stat-label" data-i18n="tradingVolume">Торговый оборот</span>
+                            <span class="stat-value" id="stat-volume">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок курсов валют -->
+                <div class="info-card">
+                    <h3 class="card-title" data-i18n="exchangeRates">Курсы валют</h3>
+                    <div id="rates-list" class="rates-list"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Template для страницы транзакций -->
+    <template id="transactions-page-template">
+        <div class="page transactions-page">
+            <div class="page-header">
+                <button class="btn-back" onclick="closeTransactionsPage()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <h1 class="page-title" data-i18n="transactionHistory">История транзакций</h1>
+            </div>
+            <div class="page-content">
+                <div id="transactions-list" class="transactions-list">
+                    <!-- Транзакции будут добавлены через JS -->
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+    (function () {
+        /* Keep splash short — first paint should not wait 2s. */
+        var SHOW_MS = 420;
+        var EXIT_MS = 180;
+        var splash = document.getElementById("app-splash");
+        if (!splash) return;
+        var done = false;
+        function hide() {
+            if (done) return;
+            done = true;
+            splash.classList.add("is-exit");
+            setTimeout(function () {
+                try {
+                    splash.style.display = "none";
+                    splash.style.animation = "none";
+                    if (splash.parentNode) splash.parentNode.removeChild(splash);
+                } catch (e) {}
+            }, EXIT_MS + 30);
+        }
+        setTimeout(hide, SHOW_MS);
+        window.addEventListener("funpay:ready", hide, { once: true });
+    })();
+    </script>
+</body>
+</html>

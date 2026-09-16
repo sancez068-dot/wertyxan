@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Отзывы · сделки в боте</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700|jetbrains-mono:500" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #4384d0;
+      --blue-hover: #3672b8;
+      --blue-soft: #edf4fc;
+      --blue-mid: #c8daf0;
+      --black: #0a0a0a;
+      --gray-1: #2e3338;
+      --gray-2: #5c6670;
+      --gray-3: #8d97a3;
+      --gray-4: #dce3eb;
+      --gray-5: #f2f5f8;
+      --white: #ffffff;
+      --star: #f0a500;
+      --star-off: #d5dde6;
+      --r: 10px;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: Manrope, system-ui, sans-serif;
+      background: var(--gray-5);
+      color: var(--black);
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      max-width: 440px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      background: var(--white);
+      box-shadow: 0 0 0 1px var(--gray-4);
+    }
+
+    /* ── Hero: sticker left + brand right ── */
+    .reviews-hero {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      margin: 12px 0 18px;
+      min-height: 168px;
+      padding: 6px 0 2px;
+    }
+
+    .reviews-sticker {
+      position: relative;
+      flex: 0 0 168px;
+      width: 168px;
+      height: 168px;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .reviews-sticker__anim {
+      width: 168px;
+      height: 168px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .28s ease;
+    }
+
+    .reviews-sticker.is-ready .reviews-sticker__anim {
+      opacity: 1;
+    }
+
+    .reviews-sticker.is-fallback {
+      display: none;
+    }
+
+    .reviews-sticker__anim canvas,
+    .reviews-sticker__anim svg {
+      display: block;
+      width: 168px !important;
+      height: 168px !important;
+    }
+
+    .reviews-hero__copy {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 12px;
+      padding: 8px 4px 8px 4px;
+    }
+
+    .reviews-hero__logo {
+      width: 128px;
+      height: auto;
+      display: block;
+    }
+
+    .reviews-hero__title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gray-2);
+      letter-spacing: -0.015em;
+      line-height: 1.35;
+      max-width: 11.5em;
+    }
+
+    .reviews-hero__title b {
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    /* Dark theme — mirrors the main Mini App tokens */
+    html[data-theme="dark"] {
+      --blue: #64B5F6;
+      --blue-hover: #90CAF9;
+      --blue-soft: rgba(10, 132, 255, 0.14);
+      --blue-mid: rgba(10, 132, 255, 0.32);
+      --black: #FFFFFF;
+      --gray-1: #EBEBF5;
+      --gray-2: #8E8E93;
+      --gray-3: #636366;
+      --gray-4: #38383A;
+      --gray-5: #000000;
+      --white: #1C1C1E;
+      --star: #FFD60A;
+      --star-off: #3A3A3C;
+      color-scheme: dark;
+    }
+
+    html[data-theme="dark"] body {
+      background: #000;
+    }
+
+    html[data-theme="dark"] .wrap {
+      background: #000;
+      box-shadow: none;
+    }
+
+    html[data-theme="dark"] .reviews-hero__logo {
+      filter: brightness(0) invert(1);
+    }
+
+    html[data-theme="dark"] .rating,
+    html[data-theme="dark"] .item {
+      background: #1C1C1E;
+    }
+
+    html[data-theme="dark"] .write {
+      background: var(--blue-soft);
+      border-color: var(--blue-mid);
+    }
+
+    html[data-theme="dark"] .fld__in,
+    html[data-theme="dark"] .fld__ta {
+      background: #2C2C2E;
+      color: #fff;
+      border-color: #38383A;
+    }
+
+    html[data-theme="dark"] .ava {
+      background: #2C2C2E;
+      border-color: #38383A;
+    }
+
+    html[data-theme="dark"] .toast {
+      background: #2C2C2E;
+      color: #fff;
+    }
+
+    html[data-theme="dark"] .feed-hd__badge {
+      background: #2C2C2E;
+      color: #8E8E93;
+    }
+
+    .content {
+      padding: calc(40px + var(--safe-t)) 16px calc(28px + var(--safe-b));
+    }
+
+    /* ── Rating ── */
+    .rating {
+      margin-top: 12px;
+      padding: 20px 18px;
+      background: var(--white);
+      border: 1px solid var(--gray-4);
+      border-radius: var(--r);
+    }
+
+    .rating__head {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding-bottom: 18px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--gray-4);
+    }
+
+    .rating__score {
+      font-size: 56px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--black);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rating__score span {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--gray-3);
+    }
+
+    .rating__meta { flex: 1; }
+
+    .rating__stars {
+      display: flex;
+      gap: 3px;
+      margin-bottom: 6px;
+    }
+
+    .rating__count {
+      font-size: 14px;
+      color: var(--gray-3);
+    }
+
+    .star {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .star--lg { width: 22px; height: 22px; }
+
+    .dist {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dist__row {
+      display: grid;
+      grid-template-columns: 30px 1fr 30px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dist__lbl {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-2);
+      text-align: right;
+    }
+
+    .dist__bar {
+      height: 8px;
+      background: var(--gray-4);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .dist__fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 4px;
+      width: 0;
+      transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .dist__n {
+      font-size: 12px;
+      color: var(--gray-3);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Form ── */
+    .write {
+      margin-top: 16px;
+      padding: 20px 18px;
+      background: var(--blue-soft);
+      border: 1px solid var(--blue-mid);
+      border-radius: var(--r);
+    }
+
+    .write__title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 4px;
+    }
+
+    .write__hint {
+      font-size: 13px;
+      color: var(--gray-2);
+      margin-bottom: 18px;
+    }
+
+    .fld { margin-bottom: 14px; }
+
+    .fld__lbl {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-1);
+      margin-bottom: 6px;
+    }
+
+    .fld__in,
+    .fld__ta {
+      width: 100%;
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--black);
+      background: var(--white);
+      border: 1px solid var(--gray-4);
+      border-radius: 8px;
+      padding: 12px 14px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .fld__in:focus,
+    .fld__ta:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(67, 132, 208, 0.18);
+    }
+
+    .fld__in::placeholder,
+    .fld__ta::placeholder { color: #a0aab6; }
+
+    .fld__ta {
+      resize: vertical;
+      min-height: 96px;
+      line-height: 1.5;
+    }
+
+    .fld__err {
+      font-size: 12px;
+      color: #c0392b;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .fld--bad .fld__in,
+    .fld--bad .fld__ta { border-color: #d66; }
+    .fld--bad .fld__err { display: block; }
+
+    .pick {
+      display: flex;
+      gap: 4px;
+    }
+
+    .pick__btn {
+      background: none;
+      border: none;
+      padding: 2px;
+      cursor: pointer;
+      border-radius: 6px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pick__btn:active { transform: scale(0.9); }
+
+    .pick__btn svg {
+      width: 40px;
+      height: 40px;
+      display: block;
+    }
+
+    .pick__btn path {
+      fill: var(--star-off);
+      transition: fill 0.1s;
+    }
+
+    .pick__btn.on path,
+    .pick__btn.hov path { fill: var(--star); }
+
+    .btn {
+      width: 100%;
+      margin-top: 4px;
+      padding: 14px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--blue);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn:active {
+      background: var(--blue-hover);
+      transform: scale(0.99);
+    }
+
+    /* ── Feed ── */
+    .feed-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 26px;
+      margin-bottom: 12px;
+      padding: 0 2px;
+    }
+
+    .feed-hd__t {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .feed-hd__badge {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-2);
+      background: var(--gray-4);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .feed {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .item {
+      padding: 16px;
+      background: var(--white);
+      border: 1px solid var(--gray-4);
+      border-radius: var(--r);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      transition-delay: var(--delay, 0ms);
+    }
+
+    .item.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .item--new {
+      border-color: var(--blue-mid);
+      background: var(--blue-soft);
+    }
+
+    .item__heart {
+      display: inline-flex;
+      flex-shrink: 0;
+      margin-left: 2px;
+      color: #d4a5b5;
+      opacity: 0.9;
+    }
+
+    .item__heart svg {
+      width: 13px;
+      height: 13px;
+      display: block;
+    }
+
+    .item__nick-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+
+    .item__top {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .ava {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      object-fit: cover;
+      border: 1px solid var(--gray-4);
+      background: var(--gray-5);
+    }
+
+    .item__who {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item__nick {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--black);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item__gift {
+      font-size: 13px;
+      color: var(--blue);
+      font-weight: 500;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item__stars {
+      display: flex;
+      gap: 2px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .item__stars .star { width: 14px; height: 14px; }
+
+    .item__text {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--gray-1);
+    }
+
+    .item__date {
+      font-size: 12px;
+      color: var(--gray-3);
+      margin-top: 10px;
+    }
+
+    .load-more {
+      text-align: center;
+      padding: 16px 0 8px;
+      font-size: 13px;
+      color: var(--gray-3);
+    }
+
+    .load-more--spin::after {
+      content: '';
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-left: 6px;
+      border: 2px solid var(--gray-4);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      vertical-align: -2px;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .boot {
+      text-align: center;
+      padding: 48px 16px;
+      color: var(--gray-3);
+      font-size: 14px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--gray-3);
+      font-size: 14px;
+      border: 1px dashed var(--gray-4);
+      border-radius: var(--r);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(16px + var(--safe-b));
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--black);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 11px 18px;
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 99;
+      transition: transform 0.3s ease, opacity 0.3s;
+    }
+
+    .toast.on {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 760px) {
+      .wrap { max-width: none; box-shadow: none; }
+      .content { padding: 12px 14px calc(20px + var(--safe-b)) !important; }
+      .reviews-hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 10px;
+        min-height: auto;
+        margin: 4px 0 14px;
+      }
+      .reviews-sticker { flex: 0 0 auto; width: 132px; height: 132px; }
+      .reviews-sticker__anim,
+      .reviews-sticker__anim canvas,
+      .reviews-sticker__anim svg { width: 132px !important; height: 132px !important; }
+      .reviews-hero__copy { align-items: center; }
+      .reviews-hero__logo { width: 112px; height: auto; }
+      .reviews-hero__title { font-size: 18px; line-height: 1.25; }
+      .rating { padding: 14px; }
+      .write { padding: 14px; }
+      .fld__in, .fld__ta { font-size: 16px; }
+      .btn { min-height: 46px; font-size: 15px; }
+      .item__top { gap: 10px; }
+      .item__nick { font-size: 14px; }
+      .item__text { font-size: 14px; line-height: 1.45; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="content">
+      <div class="reviews-hero">
+        <div class="reviews-sticker" id="reviews-sticker" aria-hidden="true">
+          <div class="reviews-sticker__anim" id="reviews-sticker-anim"></div>
+        </div>
+        <div class="reviews-hero__copy">
+          <img class="reviews-hero__logo" src="assets/logo-funpay.svg" width="128" height="48" alt="FunPay" decoding="async">
+          <p class="reviews-hero__title" data-i18n-html="pageTitle">Отзывы о <b>сделках в боте</b></p>
+        </div>
+      </div>
+
+      <section class="rating" aria-label="Rating" data-i18n-aria="ratingAria">
+        <div class="rating__head">
+          <p class="rating__score" id="avgNum">0.0<span>/5</span></p>
+          <div class="rating__meta">
+            <div class="rating__stars" id="avgStars"></div>
+            <p class="rating__count" id="totalLbl">0</p>
+          </div>
+        </div>
+        <div class="dist" id="dist"></div>
+      </section>
+
+      <section class="write" aria-label="Write review" data-i18n-aria="writeAria">
+        <h2 class="write__title" data-i18n="writeTitle">Ваш отзыв</h2>
+        <p class="write__hint" data-i18n="writeHint">Появится в общей ленте сразу после отправки</p>
+        <form id="form" novalidate>
+          <div class="fld" id="fRate">
+            <span class="fld__lbl" data-i18n="lblRate">Оценка</span>
+            <div class="pick" id="pick" role="radiogroup" aria-label="Rating"></div>
+            <p class="fld__err" data-i18n="errRate">Выберите звёзды</p>
+          </div>
+          <div class="fld" id="fNick">
+            <label class="fld__lbl" for="nick" data-i18n="lblNick">Ник</label>
+            <input class="fld__in" id="nick" maxlength="32" data-i18n-placeholder="phNick" placeholder="как в Telegram" autocomplete="nickname">
+            <p class="fld__err" data-i18n="errNick">Введите ник</p>
+          </div>
+          <div class="fld" id="fGift">
+            <label class="fld__lbl" for="gift" data-i18n="lblGift">Подарок</label>
+            <input class="fld__in" id="gift" maxlength="64" data-i18n-placeholder="phGift" placeholder="только название">
+            <p class="fld__err" data-i18n="errGift">Укажите подарок</p>
+          </div>
+          <div class="fld" id="fText">
+            <label class="fld__lbl" for="text" data-i18n="lblText">Текст</label>
+            <textarea class="fld__ta" id="text" maxlength="500" data-i18n-placeholder="phText" placeholder="как прошла сделка в боте"></textarea>
+            <p class="fld__err" data-i18n="errText">Напишите отзыв</p>
+          </div>
+          <button type="submit" class="btn" data-i18n="btnPublish">Опубликовать</button>
+        </form>
+      </section>
+
+      <div class="feed-hd">
+        <h2 class="feed-hd__t" data-i18n="feedTitle">Все отзывы</h2>
+        <span class="feed-hd__badge" id="feedN">0</span>
+      </div>
+      <div class="feed" id="feed"><p class="boot" id="boot" data-i18n="loading">Загрузка отзывов...</p></div>
+      <p class="load-more" id="loadMore" hidden></p>
+    </main>
+  </div>
+
+  <p class="toast" id="toast" role="status"></p>
+
+  <script src="../vendor/telegram-web-app.js"></script>
+  <script src="../vendor/lottie.min.js"></script>
+  <script>
+    (function () {
+      var EMBED = /(?:\?|&)embed=1(?:&|$)/.test(location.search) || window.self !== window.top;
+      var params = new URLSearchParams(location.search);
+
+      var I18N = {
+        ru: {
+          pageTitle: 'Отзывы о <b>сделках в боте</b>',
+          ratingAria: 'Общий рейтинг',
+          writeAria: 'Оставить отзыв',
+          writeTitle: 'Ваш отзыв',
+          writeHint: 'Появится в общей ленте сразу после отправки',
+          lblRate: 'Оценка', lblNick: 'Ник', lblGift: 'Подарок', lblText: 'Текст',
+          phNick: 'как в Telegram', phGift: 'только название', phText: 'как прошла сделка в боте',
+          errRate: 'Выберите звёзды', errNick: 'Введите ник', errGift: 'Укажите подарок', errText: 'Напишите отзыв',
+          btnPublish: 'Опубликовать', feedTitle: 'Все отзывы', loading: 'Загрузка отзывов...',
+          loadFail: 'Не удалось загрузить отзывы', empty: 'Пока нет отзывов',
+          toastOk: 'Отзыв опубликован', shown: 'Показано {a} из {b}',
+          plural: function (n) {
+            var m10 = n % 10, m100 = n % 100;
+            if (m100 >= 11 && m100 <= 14) return 'отзывов';
+            if (m10 === 1) return 'отзыв';
+            if (m10 >= 2 && m10 <= 4) return 'отзыва';
+            return 'отзывов';
+          },
+          locale: 'ru-RU'
+        },
+        en: {
+          pageTitle: 'Reviews of <b>bot deals</b>',
+          ratingAria: 'Overall rating',
+          writeAria: 'Leave a review',
+          writeTitle: 'Your review',
+          writeHint: 'Appears in the feed right after posting',
+          lblRate: 'Rating', lblNick: 'Nickname', lblGift: 'Gift', lblText: 'Text',
+          phNick: 'as in Telegram', phGift: 'gift name only', phText: 'how the deal went',
+          errRate: 'Pick stars', errNick: 'Enter a nickname', errGift: 'Enter a gift', errText: 'Write a review',
+          btnPublish: 'Publish', feedTitle: 'All reviews', loading: 'Loading reviews...',
+          loadFail: 'Failed to load reviews', empty: 'No reviews yet',
+          toastOk: 'Review published', shown: 'Showing {a} of {b}',
+          plural: function (n) { return n === 1 ? 'review' : 'reviews'; },
+          locale: 'en-US'
+        },
+        uk: {
+          pageTitle: 'Відгуки про <b>угоди в боті</b>',
+          ratingAria: 'Загальний рейтинг',
+          writeAria: 'Залишити відгук',
+          writeTitle: 'Ваш відгук',
+          writeHint: 'З’явиться у стрічці одразу після відправки',
+          lblRate: 'Оцінка', lblNick: 'Нік', lblGift: 'Подарунок', lblText: 'Текст',
+          phNick: 'як у Telegram', phGift: 'лише назва', phText: 'як пройшла угода',
+          errRate: 'Оберіть зірки', errNick: 'Введіть нік', errGift: 'Вкажіть подарунок', errText: 'Напишіть відгук',
+          btnPublish: 'Опублікувати', feedTitle: 'Усі відгуки', loading: 'Завантаження відгуків...',
+          loadFail: 'Не вдалося завантажити відгуки', empty: 'Поки немає відгуків',
+          toastOk: 'Відгук опубліковано', shown: 'Показано {a} з {b}',
+          plural: function (n) {
+            var m10 = n % 10, m100 = n % 100;
+            if (m100 >= 11 && m100 <= 14) return 'відгуків';
+            if (m10 === 1) return 'відгук';
+            if (m10 >= 2 && m10 <= 4) return 'відгуки';
+            return 'відгуків';
+          },
+          locale: 'uk-UA'
+        },
+        zh: {
+          pageTitle: '<b>机器人交易</b>评价',
+          ratingAria: '总评分',
+          writeAria: '发表评价',
+          writeTitle: '你的评价',
+          writeHint: '发布后会立即出现在列表中',
+          lblRate: '评分', lblNick: '昵称', lblGift: '礼物', lblText: '内容',
+          phNick: 'Telegram 昵称', phGift: '仅礼物名称', phText: '交易体验如何',
+          errRate: '请选择星级', errNick: '请输入昵称', errGift: '请输入礼物', errText: '请填写评价',
+          btnPublish: '发布', feedTitle: '全部评价', loading: '正在加载评价...',
+          loadFail: '加载失败', empty: '暂无评价',
+          toastOk: '评价已发布', shown: '已显示 {a} / {b}',
+          plural: function () { return '条评价'; },
+          locale: 'zh-CN'
+        },
+        ar: {
+          pageTitle: 'تقييمات <b>صفقات البوت</b>',
+          ratingAria: 'التقييم العام',
+          writeAria: 'اترك تقييمًا',
+          writeTitle: 'تقييمك',
+          writeHint: 'يظهر في القائمة فور الإرسال',
+          lblRate: 'التقييم', lblNick: 'اللقب', lblGift: 'الهدية', lblText: 'النص',
+          phNick: 'كما في تيليجرام', phGift: 'اسم الهدية فقط', phText: 'كيف سارت الصفقة',
+          errRate: 'اختر النجوم', errNick: 'أدخل اللقب', errGift: 'أدخل الهدية', errText: 'اكتب التقييم',
+          btnPublish: 'نشر', feedTitle: 'كل التقييمات', loading: 'جاري التحميل...',
+          loadFail: 'تعذر التحميل', empty: 'لا توجد تقييمات بعد',
+          toastOk: 'تم نشر التقييم', shown: 'عرض {a} من {b}',
+          plural: function () { return 'تقييم'; },
+          locale: 'ar'
+        },
+        es: {
+          pageTitle: 'Reseñas de <b>operaciones del bot</b>',
+          ratingAria: 'Valoración general', writeAria: 'Dejar reseña', writeTitle: 'Tu reseña',
+          writeHint: 'Aparece en el feed al publicar',
+          lblRate: 'Valoración', lblNick: 'Nick', lblGift: 'Regalo', lblText: 'Texto',
+          phNick: 'como en Telegram', phGift: 'solo nombre del regalo', phText: 'cómo fue la operación',
+          errRate: 'Elige estrellas', errNick: 'Introduce nick', errGift: 'Introduce regalo', errText: 'Escribe reseña',
+          btnPublish: 'Publicar', feedTitle: 'Todas las reseñas', loading: 'Cargando reseñas...',
+          loadFail: 'Error al cargar', empty: 'Sin reseñas', toastOk: 'Reseña publicada', shown: 'Mostrando {a} de {b}',
+          plural: function (n) { return n === 1 ? 'reseña' : 'reseñas'; }, locale: 'es-ES'
+        },
+        de: {
+          pageTitle: 'Bewertungen zu <b>Bot-Deals</b>',
+          ratingAria: 'Gesamtbewertung', writeAria: 'Bewertung schreiben', writeTitle: 'Deine Bewertung',
+          writeHint: 'Erscheint sofort nach dem Senden im Feed',
+          lblRate: 'Bewertung', lblNick: 'Nick', lblGift: 'Geschenk', lblText: 'Text',
+          phNick: 'wie in Telegram', phGift: 'nur Geschenkname', phText: 'wie der Deal lief',
+          errRate: 'Sterne wählen', errNick: 'Nick eingeben', errGift: 'Geschenk eingeben', errText: 'Bewertung schreiben',
+          btnPublish: 'Veröffentlichen', feedTitle: 'Alle Bewertungen', loading: 'Bewertungen laden...',
+          loadFail: 'Laden fehlgeschlagen', empty: 'Noch keine Bewertungen', toastOk: 'Bewertung veröffentlicht', shown: '{a} von {b}',
+          plural: function (n) { return n === 1 ? 'Bewertung' : 'Bewertungen'; }, locale: 'de-DE'
+        },
+        fr: {
+          pageTitle: 'Avis sur les <b>transactions du bot</b>',
+          ratingAria: 'Note globale', writeAria: 'Laisser un avis', writeTitle: 'Votre avis',
+          writeHint: 'Apparaît dans le fil après publication',
+          lblRate: 'Note', lblNick: 'Pseudo', lblGift: 'Cadeau', lblText: 'Texte',
+          phNick: 'comme sur Telegram', phGift: 'nom du cadeau', phText: 'comment s\'est passée la transaction',
+          errRate: 'Choisissez des étoiles', errNick: 'Entrez un pseudo', errGift: 'Entrez un cadeau', errText: 'Écrivez un avis',
+          btnPublish: 'Publier', feedTitle: 'Tous les avis', loading: 'Chargement des avis...',
+          loadFail: 'Échec du chargement', empty: 'Pas encore d\'avis', toastOk: 'Avis publié', shown: '{a} sur {b}',
+          plural: function (n) { return n === 1 ? 'avis' : 'avis'; }, locale: 'fr-FR'
+        },
+        pt: {
+          pageTitle: 'Avaliações de <b>negociações do bot</b>',
+          ratingAria: 'Avaliação geral', writeAria: 'Deixar avaliação', writeTitle: 'Sua avaliação',
+          writeHint: 'Aparece no feed após publicar',
+          lblRate: 'Nota', lblNick: 'Nick', lblGift: 'Presente', lblText: 'Texto',
+          phNick: 'como no Telegram', phGift: 'só nome do presente', phText: 'como foi a negociação',
+          errRate: 'Escolha estrelas', errNick: 'Digite nick', errGift: 'Digite presente', errText: 'Escreva avaliação',
+          btnPublish: 'Publicar', feedTitle: 'Todas avaliações', loading: 'Carregando avaliações...',
+          loadFail: 'Falha ao carregar', empty: 'Sem avaliações', toastOk: 'Avaliação publicada', shown: '{a} de {b}',
+          plural: function (n) { return n === 1 ? 'avaliação' : 'avaliações'; }, locale: 'pt-BR'
+        },
+        ja: {
+          pageTitle: '<b>ボット取引</b>のレビュー',
+          ratingAria: '総合評価', writeAria: 'レビューを書く', writeTitle: 'あなたのレビュー',
+          writeHint: '投稿後すぐフィードに表示されます',
+          lblRate: '評価', lblNick: 'ニックネーム', lblGift: 'ギフト', lblText: '本文',
+          phNick: 'Telegramと同じ', phGift: 'ギフト名のみ', phText: '取引はどうでしたか',
+          errRate: '星を選択', errNick: 'ニックネームを入力', errGift: 'ギフトを入力', errText: 'レビューを書いてください',
+          btnPublish: '公開', feedTitle: 'すべてのレビュー', loading: 'レビューを読み込み中...',
+          loadFail: '読み込みに失敗', empty: 'レビューはまだありません', toastOk: 'レビューを公開しました', shown: '{a} / {b}',
+          plural: function () { return '件'; }, locale: 'ja-JP'
+        },
+        hi: {
+          pageTitle: '<b>बॉट सौदों</b> की समीक्षाएँ',
+          ratingAria: 'कुल रेटिंग', writeAria: 'समीक्षा लिखें', writeTitle: 'आपकी समीक्षा',
+          writeHint: 'भेजने के तुरंत बाद फ़ीड में दिखेगी',
+          lblRate: 'रेटिंग', lblNick: 'निक', lblGift: 'गिफ्ट', lblText: 'टेक्स्ट',
+          phNick: 'Telegram जैसा', phGift: 'केवल गिफ्ट नाम', phText: 'सौदा कैसा रहा',
+          errRate: 'सितारे चुनें', errNick: 'निक दर्ज करें', errGift: 'गिफ्ट दर्ज करें', errText: 'समीक्षा लिखें',
+          btnPublish: 'प्रकाशित करें', feedTitle: 'सभी समीक्षाएँ', loading: 'समीक्षाएँ लोड हो रही हैं...',
+          loadFail: 'लोड विफल', empty: 'अभी कोई समीक्षा नहीं', toastOk: 'समीक्षा प्रकाशित', shown: '{a} / {b}',
+          plural: function () { return 'समीक्षाएँ'; }, locale: 'hi-IN'
+        },
+        tr: {
+          pageTitle: '<b>Bot işlemleri</b> yorumları',
+          ratingAria: 'Genel puan', writeAria: 'Yorum yaz', writeTitle: 'Yorumunuz',
+          writeHint: 'Gönderince akışta hemen görünür',
+          lblRate: 'Puan', lblNick: 'Nick', lblGift: 'Hediye', lblText: 'Metin',
+          phNick: 'Telegram\'daki gibi', phGift: 'sadece hediye adı', phText: 'işlem nasıldı',
+          errRate: 'Yıldız seçin', errNick: 'Nick girin', errGift: 'Hediye girin', errText: 'Yorum yazın',
+          btnPublish: 'Yayınla', feedTitle: 'Tüm yorumlar', loading: 'Yorumlar yükleniyor...',
+          loadFail: 'Yükleme başarısız', empty: 'Henüz yorum yok', toastOk: 'Yorum yayınlandı', shown: '{a} / {b}',
+          plural: function () { return 'yorum'; }, locale: 'tr-TR'
+        }
+      };
+
+      function pickLang(raw) {
+        var l = String(raw || 'ru').toLowerCase().split('-')[0];
+        return I18N[l] ? l : 'en';
+      }
+
+      function applyTheme(theme) {
+        var t = theme === 'dark' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#ffffff');
+        if (typeof window.__reviewsReportHeight === 'function') window.__reviewsReportHeight();
+      }
+
+      function applyLang(lang) {
+        window.__reviewsLang = pickLang(lang);
+        var pack = I18N[window.__reviewsLang];
+        document.documentElement.lang = window.__reviewsLang;
+        document.documentElement.dir = window.__reviewsLang === 'ar' ? 'rtl' : 'ltr';
+
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+          var k = el.getAttribute('data-i18n');
+          if (k && pack[k] != null) el.textContent = pack[k];
+        });
+        document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+          var k = el.getAttribute('data-i18n-html');
+          if (k && pack[k] != null) el.innerHTML = pack[k];
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+          var k = el.getAttribute('data-i18n-placeholder');
+          if (k && pack[k] != null) el.setAttribute('placeholder', pack[k]);
+        });
+        document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+          var k = el.getAttribute('data-i18n-aria');
+          if (k && pack[k] != null) el.setAttribute('aria-label', pack[k]);
+        });
+        if (typeof window.__reviewsRefreshStats === 'function') window.__reviewsRefreshStats();
+        if (typeof window.__reviewsReportHeight === 'function') window.__reviewsReportHeight();
+      }
+
+      window.__reviewsT = function (key) {
+        var pack = I18N[window.__reviewsLang || 'ru'] || I18N.ru;
+        return pack[key];
+      };
+      window.__reviewsLocale = function () {
+        var pack = I18N[window.__reviewsLang || 'ru'] || I18N.ru;
+        return pack.locale || 'ru-RU';
+      };
+      window.__reviewsPlural = function (n) {
+        var pack = I18N[window.__reviewsLang || 'ru'] || I18N.ru;
+        return typeof pack.plural === 'function' ? pack.plural(n) : '';
+      };
+
+      applyTheme(params.get('theme') || localStorage.getItem('app_theme') || 'light');
+      applyLang(params.get('lang') || localStorage.getItem('app_language') || 'ru');
+
+      window.addEventListener('message', function (ev) {
+        if (!ev || !ev.data) return;
+        if (ev.data.type === 'reviews-theme') applyTheme(ev.data.theme);
+        if (ev.data.type === 'reviews-lang') applyLang(ev.data.lang);
+      });
+
+      function notifyParent(payload) {
+        if (!EMBED || !window.parent || window.parent === window) return;
+        try { window.parent.postMessage(payload, '*'); } catch (e) {}
+      }
+
+      function reportHeight() {
+        var h = Math.max(
+          document.documentElement.scrollHeight || 0,
+          document.body ? document.body.scrollHeight : 0
+        );
+        notifyParent({ type: 'reviews-height', height: h });
+      }
+
+      function goBack() {
+        if (EMBED) {
+          notifyParent({ type: 'reviews-close' });
+          return;
+        }
+        window.location.replace('/');
+      }
+
+      window.__reviewsGoBack = goBack;
+      window.__reviewsReportHeight = reportHeight;
+
+      if (EMBED) {
+        try {
+          var tg = window.Telegram && window.Telegram.WebApp;
+          if (tg && tg.BackButton) tg.BackButton.hide();
+        } catch (e) {}
+        window.addEventListener('load', reportHeight);
+        setInterval(reportHeight, 800);
+        return;
+      }
+
+      function wireTgBack() {
+        var tg = window.Telegram && window.Telegram.WebApp;
+        if (!tg || !tg.BackButton) return false;
+        try { tg.ready(); } catch (e) {}
+        try {
+          tg.BackButton.show();
+          tg.BackButton.onClick(goBack);
+          return true;
+        } catch (e) { return false; }
+      }
+      if (!wireTgBack()) {
+        setTimeout(wireTgBack, 120);
+        setTimeout(wireTgBack, 500);
+      }
+    })();
+  </script>
+
+  <script>
+    const USER_KEY = 'bot-user-reviews-v1';
+    const PAGE = 30;
+    const AVATAR = 'assets/avatar.png';
+
+    const $ = id => document.getElementById(id);
+    let data = [], sorted = [], pick = 0, shown = 0, loading = false;
+
+    function esc(s) { const v = String(s ?? ""); return v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function starSvg(on, lg) {
+      const f = on ? 'var(--star)' : 'var(--star-off)';
+      return `<svg class="star${lg ? ' star--lg' : ''}" viewBox="0 0 24 24" aria-hidden="true"><path fill="${f}" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+    }
+    function stars(n, lg) { return Array.from({ length: 5 }, (_, i) => starSvg(i < n, lg)).join(''); }
+
+    function loadUser() {
+      try { const r = localStorage.getItem(USER_KEY); if (r) return JSON.parse(r); } catch (_) {}
+      return [];
+    }
+    function saveUser(d) { localStorage.setItem(USER_KEY, JSON.stringify(d)); }
+
+    function plural(n) {
+      if (typeof window.__reviewsPlural === 'function') return window.__reviewsPlural(n);
+      const m10 = n % 10, m100 = n % 100;
+      if (m100 >= 11 && m100 <= 14) return 'отзывов';
+      if (m10 === 1) return 'отзыв';
+      if (m10 >= 2 && m10 <= 4) return 'отзыва';
+      return 'отзывов';
+    }
+
+    function fmtDate(iso) {
+      const loc = typeof window.__reviewsLocale === 'function' ? window.__reviewsLocale() : 'ru-RU';
+      return new Date(iso).toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function stats() {
+      const n = data.length, cnt = [0,0,0,0,0,0];
+      let sum = 0;
+      data.forEach(r => { cnt[r.rating]++; sum += r.rating; });
+      const avg = n ? (sum / n).toFixed(1) : '0.0';
+      const loc = typeof window.__reviewsLocale === 'function' ? window.__reviewsLocale() : 'ru-RU';
+      $('avgNum').innerHTML = `${avg}<span>/5</span>`;
+      $('avgStars').innerHTML = n ? stars(Math.round(sum / n), true) : stars(0, true);
+      $('totalLbl').textContent = `${n.toLocaleString(loc)} ${plural(n)}`;
+      $('feedN').textContent = n.toLocaleString(loc);
+      $('dist').innerHTML = [5,4,3,2,1].map(s => {
+        const c = cnt[s], pct = n ? (c / n) * 100 : 0;
+        return `<div class="dist__row"><span class="dist__lbl">${s}★</span><div class="dist__bar"><div class="dist__fill" data-p="${pct}"></div></div><span class="dist__n">${c.toLocaleString(loc)}</span></div>`;
+      }).join('');
+      requestAnimationFrame(() => {
+        $('dist').querySelectorAll('.dist__fill').forEach(b => { b.style.width = b.dataset.p + '%'; });
+      });
+    }
+    window.__reviewsRefreshStats = stats;
+
+    function sortReviews(arr) {
+      return [...arr].sort((a, b) => {
+        const ap = a.pinOrder ?? 99999;
+        const bp = b.pinOrder ?? 99999;
+        if (ap !== bp) return ap - bp;
+        return new Date(b.date) - new Date(a.date);
+      });
+    }
+
+    function itemHtml(r, extra) {
+      const cls = 'item' + (extra || '');
+      const heart = r.adminPick
+        ? '<span class="item__heart" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span>'
+        : '';
+      return `<article class="${cls}" data-id="${r.id}">
+        <div class="item__top">
+          <img class="ava" src="${AVATAR}" alt="" width="42" height="42" loading="lazy">
+          <div class="item__who">
+            <div class="item__nick-row"><span class="item__nick">${esc(r.nick)}</span>${heart}</div>
+            <p class="item__gift">${esc(r.gift)}</p>
+          </div>
+          <div class="item__stars" aria-label="${r.rating} из 5">${stars(r.rating)}</div>
+        </div>
+        <p class="item__text">${esc(r.text)}</p>
+        <time class="item__date" datetime="${r.date}">${fmtDate(r.date)}</time>
+      </article>`;
+    }
+
+    function observeNew(nodes) {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        nodes.forEach(c => c.classList.add('show'));
+        return;
+      }
+      const io = new IntersectionObserver(es => {
+        es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('show'); io.unobserve(e.target); } });
+      }, { threshold: 0.06 });
+      nodes.forEach(c => io.observe(c));
+    }
+
+    function updateLoadMore() {
+      const lm = $('loadMore');
+      if (shown >= sorted.length) {
+        lm.hidden = true;
+        return;
+      }
+      lm.hidden = false;
+      const loc = typeof window.__reviewsLocale === 'function' ? window.__reviewsLocale() : 'ru-RU';
+      const tpl = (typeof window.__reviewsT === 'function' && window.__reviewsT('shown')) || 'Показано {a} из {b}';
+      lm.textContent = tpl
+        .replace('{a}', shown.toLocaleString(loc))
+        .replace('{b}', sorted.length.toLocaleString(loc));
+      lm.classList.remove('load-more--spin');
+    }
+
+    function appendPage() {
+      if (loading || shown >= sorted.length) return;
+      loading = true;
+      $('loadMore').classList.add('load-more--spin');
+
+      const chunk = sorted.slice(shown, shown + PAGE);
+      const wrap = document.createElement('div');
+      wrap.innerHTML = chunk.map(r => itemHtml(r, '')).join('');
+      const nodes = [...wrap.children];
+      $('feed').append(...nodes);
+      shown += chunk.length;
+      observeNew(nodes);
+      updateLoadMore();
+      loading = false;
+      if (typeof window.__reviewsReportHeight === 'function') window.__reviewsReportHeight();
+    }
+
+    function resetFeed() {
+      sorted = sortReviews(data);
+      shown = 0;
+      $('feed').innerHTML = '';
+      if (!sorted.length) {
+        const empty = (typeof window.__reviewsT === 'function' && window.__reviewsT('empty')) || 'Пока нет отзывов';
+        $('feed').innerHTML = `<p class="empty">${empty}</p>`;
+        $('loadMore').hidden = true;
+        if (typeof window.__reviewsReportHeight === 'function') window.__reviewsReportHeight();
+        return;
+      }
+      appendPage();
+    }
+
+    function toast(msg) {
+      const t = $('toast'); t.textContent = msg; t.classList.add('on');
+      clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2000);
+    }
+
+    function initPick() {
+      const el = $('pick');
+      el.innerHTML = Array.from({ length: 5 }, (_, i) => {
+        const v = i + 1;
+        return `<button type="button" class="pick__btn" data-v="${v}" aria-label="${v} звёзд"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>`;
+      }).join('');
+      const btns = [...el.querySelectorAll('.pick__btn')];
+      const paint = v => btns.forEach((b, i) => { b.classList.toggle('on', i < v); b.classList.remove('hov'); });
+      btns.forEach(b => {
+        b.addEventListener('click', () => { pick = +b.dataset.v; paint(pick); $('fRate').classList.remove('fld--bad'); });
+        b.addEventListener('pointerenter', () => btns.forEach((x, i) => x.classList.toggle('hov', i < +b.dataset.v)));
+      });
+      el.addEventListener('pointerleave', () => paint(pick));
+    }
+
+    $('form').addEventListener('submit', e => {
+      e.preventDefault();
+      const nick = $('nick').value.trim(), gift = $('gift').value.trim(), text = $('text').value.trim();
+      let ok = true;
+      [['fRate', pick > 0], ['fNick', !!nick], ['fGift', !!gift], ['fText', !!text]].forEach(([id, v]) => {
+        $(id).classList.toggle('fld--bad', !v); if (!v) ok = false;
+      });
+      if (!ok) return;
+
+      const r = { id: 'u' + Date.now(), nick, gift, text, rating: pick, date: new Date().toISOString() };
+      const users = loadUser();
+      users.unshift(r);
+      saveUser(users);
+      data = [r, ...data.filter(x => x.id !== r.id)];
+
+      sorted = sortReviews(data);
+      shown = 0;
+      $('feed').innerHTML = '';
+      appendPage();
+      stats();
+      updateLoadMore();
+      $('form').reset(); pick = 0;
+      $('pick').querySelectorAll('.pick__btn').forEach(b => b.classList.remove('on', 'hov'));
+      toast((typeof window.__reviewsT === 'function' && window.__reviewsT('toastOk')) || 'Отзыв опубликован');
+    });
+
+    const scrollSentinel = new IntersectionObserver(es => {
+      es.forEach(e => { if (e.isIntersecting) appendPage(); });
+    }, { rootMargin: '200px' });
+    scrollSentinel.observe($('loadMore'));
+
+    async function mountReviewsSticker() {
+      const wrap = $('reviews-sticker');
+      const host = $('reviews-sticker-anim');
+      if (!wrap || !host || !window.lottie) return;
+      let shown = false;
+      const reveal = (fallback) => {
+        if (!wrap.isConnected) return;
+        if (fallback) wrap.classList.add('is-fallback');
+        else wrap.classList.add('is-ready');
+        if (shown) return;
+        shown = true;
+        if (wrap._failTimer) { clearTimeout(wrap._failTimer); wrap._failTimer = null; }
+      };
+      wrap._failTimer = setTimeout(() => reveal(true), 2500);
+      try {
+        const res = await fetch('../assets/stickers/reviews.json?v=61');
+        if (!res.ok) throw new Error('sticker ' + res.status);
+        const animationData = await res.json();
+        if (!wrap.isConnected) return;
+        let anim;
+        try {
+          anim = window.lottie.loadAnimation({
+            container: host,
+            renderer: 'canvas',
+            loop: true,
+            autoplay: true,
+            animationData,
+            rendererSettings: {
+              clearCanvas: true,
+              progressiveLoad: true,
+              preserveAspectRatio: 'xMidYMid meet'
+            }
+          });
+        } catch (e) {
+          return void reveal(true);
+        }
+        wrap._anim = anim;
+        try { anim.addEventListener('DOMLoaded', () => reveal(false)); } catch (_) {}
+        try { anim.addEventListener('data_ready', () => reveal(false)); } catch (_) {}
+        try { anim.addEventListener('data_failed', () => reveal(true)); } catch (_) {}
+        setTimeout(() => {
+          if (wrap.isConnected && !wrap.classList.contains('is-fallback')) reveal(false);
+        }, 500);
+      } catch (e) {
+        reveal(true);
+      }
+    }
+
+    async function boot() {
+      initPick();
+      mountReviewsSticker();
+      const bootEl = $('boot');
+      try {
+        const res = await fetch('/reviews/reviews.json?v=63', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const base = await res.json();
+        if (!Array.isArray(base)) throw new Error('bad json');
+        const users = loadUser();
+        const ids = new Set(users.map(u => u.id));
+        data = [...users, ...base.filter(b => !ids.has(b.id))];
+      } catch (err) {
+        if (bootEl) bootEl.textContent = (typeof window.__reviewsT === 'function' && window.__reviewsT('loadFail')) || 'Не удалось загрузить отзывы';
+        console.error('reviews boot failed', err);
+        return;
+      }
+      stats();
+      resetFeed();
+      if (typeof window.__reviewsReportHeight === 'function') window.__reviewsReportHeight();
+    }
+
+    boot();
+  </script>
+</body>
+</html>
